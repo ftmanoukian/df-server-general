@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pantalla Totem</title>
+    <script src="../static/js/socket.io.min.js"></script>
+    <script src="../static/js/jquery-3.6.0.min.js"></script>
+    <script>
+        const socket = io('http://127.0.0.1:5000');
+        
+        $(document).ready(function() {
+            console.log('ready')
+            $('.screen').hide()
+            $('#idle').show()
+            $('.game-name').html(`{{ gameName }}`)
+            $('.game-unit').html(`{{ gameUnit }}`)
+        });
+
+        socket.on('change-screen', function(data) {
+            console.log('change-screen')
+            $('.screen').hide()
+            $('#' + data.screenId).show()
+        });
+
+        socket.on('update-countdown', function(data) {
+            $('.countdown-timer').text(data.counterVal)
+        })
+    </script>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body style="width: 1024px; height: 600px;">
+    {{screensContent | safe}}
+</body>
+</html>
