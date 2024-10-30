@@ -1,14 +1,6 @@
 from DFServer import *
 
 class TatetiServer(DFServer):
-    class TatetiServerScreen(Enum):
-        idle = 'idle'
-        loading = 'loading'
-        playingP1 = 'playing-p1'
-        playingP2 = 'playing-p2'
-        finishedP1 = 'finished-p1'
-        finishedP2 = 'finished-p2'
-        finishedTie = 'finished-tie'
 
     class TatetiPlayer(Enum):
         p1 = 'jugador 1'
@@ -17,33 +9,18 @@ class TatetiServer(DFServer):
 
     def __init__(self, host = '127.0.0.1', port = 5000):
         super().__init__(DFServer.DFServerType.type1, gameName = 'tateti', host = host, port = port)
-        self.__lastScreen = TatetiServer.TatetiServerScreen.idle
-        self.showIdle()
-
-    def showIdle(self):
-        currScreen = TatetiServer.TatetiServerScreen.idle
-        if self.__lastScreen != currScreen:
-            self.socketio.emit('change-screen',{'screenId': currScreen.value})
-            self.__lastScreen = currScreen
-    
-    def showCountdown(self, counterVal):
-        currScreen = TatetiServer.TatetiServerScreen.loading
-        if self.__lastScreen != currScreen:
-            self.socketio.emit('change-screen',{'screenId': currScreen.value})
-            self.__lastScreen = currScreen
-        self.socketio.emit('update-countdown',{'counterVal': counterVal})
 
     def showPlaying(self, player : TatetiPlayer):
         if not isinstance(player, TatetiServer.TatetiPlayer):
             raise ValueError("player must be of type 'TatetiServer.TatetiPlayer")
 
         if player == TatetiServer.TatetiPlayer.p1:
-            currScreen = TatetiServer.TatetiServerScreen.playingP1
+            currScreen = DFServer.DFType1Screens.playingP1
         else:
-            currScreen = TatetiServer.TatetiServerScreen.playingP2
+            currScreen = DFServer.DFType1Screens.playingP2
         
-        if currScreen != self.__lastScreen:
-            self.socketio.emit('change-screen',{'screenId': currScreen.value})
+        if currScreen != self._lastScreen:
+            self._socketio.emit('change-screen',{'screenId': currScreen.value})
             self.__lastScreen = currScreen
 
     def showWinner(self, player : TatetiPlayer):
@@ -51,14 +28,14 @@ class TatetiServer(DFServer):
             raise ValueError("player must be of type 'TatetiServer.TatetiPlayer")
         
         if player == TatetiServer.TatetiPlayer.p1:
-            currScreen = TatetiServer.TatetiServerScreen.finishedP1
+            currScreen = DFServer.DFType1Screens.finishedP1
         elif player == TatetiServer.TatetiPlayer.p2:
-            currScreen = TatetiServer.TatetiServerScreen.finishedP2
+            currScreen = DFServer.DFType1Screens.finishedP2
         else:
-            currScreen = TatetiServer.TatetiServerScreen.finishedTie
+            currScreen = DFServer.DFType1Screens.finishedTie
 
         if currScreen != self.__lastScreen:
-            self.socketio.emit('change-screen',{'screenId': currScreen.value})
+            self._socketio.emit('change-screen',{'screenId': currScreen.value})
             self.__lastScreen = currScreen
 
 if __name__ == "__main__":
