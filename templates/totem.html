@@ -11,19 +11,21 @@
             console.log('ready')
             $('.screen').hide()
             $('#idle').show()
-            $('.game-name').html(`{{ gameName }}`)
-            $('.game-unit').html(`{{ gameUnit }}`)
+            $('.gameName').html(`{{ gameName }}`)
+            $('.gameUnit').html(`{{ gameUnit }}`)
         });
 
-        socket.on('change-screen', function(data) {
-            console.log('change-screen')
+        socket.on('changeScreen', function(data) {
+            console.log('changeScreen',data.screenId)
             $('.screen').hide()
             $('#' + data.screenId).show()
         });
 
-        socket.on('update-countdown', function(data) {
-            $('.countdown-timer').text(data.counterVal)
+        socket.on('updateParam', function(data) {
+            console.log('updateParam',data.paramValue)
+            $('.' + data.paramClass).html(data.paramValue)
         })
+
     </script>
     <link rel="stylesheet" href="../static/styles.css">
 </head>
