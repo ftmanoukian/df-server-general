@@ -6,16 +6,6 @@ from os import path
 from enum import Enum
 
 class DFBaseServer():
-    """
-    This class is only meant to be inherited by the servers corresponding to each game, as it implements the common server functionality.
-
-    Parameters:
-    * clientType: the type of html client to load (1-4). It should be selected via the contained 'DFBaseServerType' class
-    * gameName: the name the game will show when in idle state
-    * gameUnit: the unit that will accompany the score of the user (does not apply to all games)
-    * host (str): the URL in which the server will host the client
-    * port (int): the port in which the server will host the client
-    """
 
     class DFBaseServerType(Enum):
         type1 = 'type1'
@@ -34,7 +24,7 @@ class DFBaseServer():
         finishedP2 = 'finished-p2'
         finishedTie = 'finished-tie'
 
-    class DFType2Screens(Enum):
+    class DFType2Screens(Enum): # not used anymore - TODO: delete from everywhere
         playing = 'playing'
         finishedNormal = 'finished-normal'
         finishedRecord = 'finished-record'
@@ -50,7 +40,27 @@ class DFBaseServer():
         finishedNormal = 'finished-normal'
         finishedRecord = 'finished-record'
 
-    def __init__(self, clientType : DFBaseServerType, gameName : str, gameUnit = None, host = '127.0.0.1', port = 5000):
+    def __init__(
+            self, 
+            clientType : DFBaseServerType, 
+            gameName : str, 
+            gameUnit = None, 
+            playingTitle = None, 
+            host = '127.0.0.1', 
+            port = 5000
+            ):
+        """
+        This class is only meant to be inherited by the servers corresponding to each game, as it implements the common server functionality.
+
+        Parameters:
+        * clientType: the type of html client to load (1-4). It should be selected via the contained 'DFBaseServerType' class
+        * gameName: the name the game will show when in idle state
+        * gameUnit: the unit that will accompany the score of the user (does not apply to all games)
+        * playingTitle: (only type 4) - the title that will accompany the playing screen
+        * host (str): the URL in which the server will host the client
+        * port (int): the port in which the server will host the client
+        """
+
         if not isinstance(clientType, DFBaseServer.DFBaseServerType):
             raise ValueError("clientType must be of type 'DFBaseServerType'")
 
@@ -72,7 +82,7 @@ class DFBaseServer():
 
         @self.__app.route('/')
         def __renderTotem():
-            return render_template('totem.html', screensContent = self.__screens_content, gameName = self.__gameName, gameUnit = gameUnit)
+            return render_template('totem.html', screensContent = self.__screens_content, gameName = self.__gameName, gameUnit = gameUnit, playingTitle = playingTitle)
 
     def __server(self):
         self._socketio.run(self.__app, self.__host, self.__port, use_reloader = False)
@@ -135,7 +145,6 @@ class DFBaseServer():
         """
         self._socketio.emit('updateParam',{'paramClass':paramClass, 'paramValue': paramValue})
 
-
 class DFType3Server(DFBaseServer):
     """
     Template for the games that use a type 3 server. Must be inherited by the class visible to the game and should not used directly.
@@ -167,16 +176,17 @@ class DFType3Server(DFBaseServer):
         if remainingSecs != -1:
             self.updateParam('countdownTimer',remainingSecs)
 
-    def showFinished(self, finalScore : any, recordScore : any = None, newRecord : bool = False):
+    def showFinished(self, finalScore : any, recordScore : any = None):
         """
-        Shows the game finished screen. If only 'finalScore' is provided, shows the 'no new record' screen, and the record is set to the same value as 'finalScore'. If 'recordScore' is provided but 'newRecord' is not set to True, shows both values provided. Else, shows the 'new record' screen.
+        Shows the game finished screen. The 'no new record' screen is shown if only 'finalScore' is provided, or if 'recordScore' is less than or equal to 'finalScore'. Otherwise, the 'new record' screen is shown.
         """
-        if newRecord:
-            currScreen = DFBaseServer.DFType3Screens.finishedRecord
-        else:
-            if recordScore is None:
-                recordScore = finalScore
+        if recordScore is None:
+            recordScore = finalScore
+
+        if finalScore <= recordScore:
             currScreen = DFBaseServer.DFType3Screens.finishedNormal
+        else:
+            currScreen = DFBaseServer.DFType3Screens.finishedRecord
         
         self.showScreen(currScreen)
         self.updateParam('finalScore',f'{finalScore} {self._gameUnit}')
@@ -203,16 +213,17 @@ class DFType4Server(DFBaseServer):
         self.showScreen(currScreen)
         self.updateParam('score',score)
 
-    def showFinished(self, finalScore : any, recordScore : any = None, newRecord : bool = False):
+    def showFinished(self, finalScore : any, recordScore : any = None):
         """
-        Shows the game finished screen. If only 'finalScore' is provided, shows the 'no new record' screen, and the record is set to the same value as 'finalScore'. If 'recordScore' is provided but 'newRecord' is not set to True, shows both values provided. Else, shows the 'new record' screen.
+        Shows the game finished screen. The 'no new record' screen is shown if only 'finalScore' is provided, or if 'recordScore' is less than or equal to 'finalScore'. Otherwise, the 'new record' screen is shown.
         """
-        if newRecord:
-            currScreen = DFBaseServer.DFType4Screens.finishedRecord
-        else:
-            if recordScore is None:
-                recordScore = finalScore
+        if recordScore is None:
+            recordScore = finalScore
+
+        if finalScore <= recordScore:
             currScreen = DFBaseServer.DFType4Screens.finishedNormal
+        else:
+            currScreen = DFBaseServer.DFType4Screens.finishedRecord
         
         self.showScreen(currScreen)
         self.updateParam('finalScore',f'{finalScore} {self._gameUnit}')
