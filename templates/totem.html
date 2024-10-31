@@ -13,6 +13,7 @@
             $('#idle').show()
             $('.gameName').html(`{{ gameName }}`)
             $('.gameUnit').html(`{{ gameUnit }}`)
+            $('.playingTitle').html(`{{ playingTitle }}`)
         });
 
         socket.on('changeScreen', function(data) {
