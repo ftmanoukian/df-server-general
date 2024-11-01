@@ -1,89 +1,215 @@
-from flask import Flask, render_template
-from flask_socketio import SocketIO
-from threading import Thread
-from time import sleep
-from os import path
-from enum import Enum
+from DFBaseServer import DFBaseServer, DFType3Server, DFType4Server, Enum
 
-class DFServer():
-    class DFServerType(Enum):
-        type1 = 'type1'
-        type2 = 'type2'
-        type3 = 'type3'
-        type4 = 'type4'
+# Type1
 
-    class DFGenericScreens(Enum):
-        idle = 'idle'
-        loading = 'loading'
+class TatetiServer(DFBaseServer):
 
-    class DFType1Screens(Enum):
-        playingP1 = 'playing-p1'
-        playingP2 = 'playing-p2'
-        finishedP1 = 'finished-p1'
-        finishedP2 = 'finished-p2'
-        finishedTie = 'finished-tie'
+    class TatetiPlayer(Enum):
+        p1 = 'jugador 1'
+        p2 = 'jugador 2'
+        tie = 'empate'
 
-    class DFType2Screens(Enum):
-        playing = 'playing'
-        finishedNormal = 'finished-normal'
-        finishedRecord = 'finished-record'
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            clientType = DFBaseServer.DFBaseServerType.type1,
+            gameName = 'tateti',
+            host = host,
+            port = port)
 
-    class DFType3Screens(Enum):
-        playing = 'playing'
-        playingLowTime = 'playing-lowtime'
-        finishedNormal = 'finished-normal'
-        finishedRecord = 'finished-record'
+    def showPlaying(self, player : TatetiPlayer):
+        if not isinstance(player, TatetiServer.TatetiPlayer):
+            raise ValueError("player must be of type 'TatetiServer.TatetiPlayer")
 
-    class DFType4Screens(Enum):
-        playing = 'playing'
-        finishedNormal = 'finished-normal'
-        finishedRecord = 'finished-record'
+        if player == TatetiServer.TatetiPlayer.p1:
+            currScreen = DFBaseServer.DFType1Screens.playingP1
+        else:
+            currScreen = DFBaseServer.DFType1Screens.playingP2
+        
+        self._showScreen(currScreen)
 
-    def __init__(self, clientType : DFServerType, gameName : str, gameUnit = None, host = '127.0.0.1', port = 5000):
-        if not isinstance(clientType, DFServer.DFServerType):
-            raise ValueError("clientType must be of type 'DFServerType'")
+    def showWinner(self, player : TatetiPlayer):
+        if not isinstance(player, TatetiServer.TatetiPlayer):
+            raise ValueError("player must be of type 'TatetiServer.TatetiPlayer")
+        
+        if player == TatetiServer.TatetiPlayer.p1:
+            currScreen = DFBaseServer.DFType1Screens.finishedP1
+        elif player == TatetiServer.TatetiPlayer.p2:
+            currScreen = DFBaseServer.DFType1Screens.finishedP2
+        else:
+            currScreen = DFBaseServer.DFType1Screens.finishedTie
 
-        self.__app = Flask(__name__)
-        self._socketio = SocketIO(self.__app)
-        self.__host = host
-        self.__port = port
-        self.__gameName = gameName
-        self.__gameUnit = gameUnit
+        self._showScreen(currScreen)
 
-        self.__serverRunning = False
+# Type 3
 
-        dir = path.join(path.dirname(path.abspath(__file__)),'screens_generic')
-        with open(path.join(dir,'screens_generic.html'),'r') as f:
-            self.__screens_content = f.read()
-        with open(path.join(dir,f'screens_{clientType.value}.html'), 'r') as f:
-            self.__screens_content += f.read()
+class ArosServer(DFType3Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'aros basket',
+            gameUnit = 'puntos',
+            lowTimeThr = 15,
+            host = host,
+            port = port
+        )
 
-        @self.__app.route('/')
-        def __renderTotem():
-            return render_template('totem.html', screensContent = self.__screens_content, gameName = self.__gameName, gameUnit = gameUnit)
+class ArqueroServer(DFType3Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'arquero',
+            gameUnit = 'puntos',
+            lowTimeThr = 15,
+            host = host,
+            port = port
+        )
 
-    def __server(self):
-        print('socketio run')
-        self._socketio.run(self.__app, self.__host, self.__port, use_reloader = False)
+class AutopaseServer(DFType3Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'autopase',
+            gameUnit = 'pases',
+            lowTimeThr = 15,
+            host = host,
+            port = port
+        )
 
-    def start(self):
-        if self.__serverRunning == False:
-            self.__serverRunning = True
-            self.__serverThread = Thread(target = self.__server)
-            self.__serverThread.daemon = True
-            self.__serverThread.start()
-            self._lastScreen = DFServer.DFGenericScreens.idle
-            self.showIdle()
+class FuerzaServer(DFType3Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'fuerza',
+            gameUnit = 'kgf',
+            lowTimeThr = 15,
+            host = host,
+            port = port
+        )
 
-    def showIdle(self):
-        currScreen = DFServer.DFGenericScreens.idle
-        if currScreen != self._lastScreen:
-            self._lastScreen = currScreen
-            self._socketio.emit('change-screen',{'screenId': currScreen.value})
+class OctogonoServer(DFType3Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'octógono',
+            gameUnit = 'puntos',
+            lowTimeThr = 15,
+            host = host,
+            port = port
+        )
 
-    def showCountdown(self, remainingSecs : int):
-        currScreen = DFServer.DFGenericScreens.loading
-        if currScreen != self._lastScreen:
-            self._lastScreen = currScreen
-            self._socketio.emit('change-screen',{'screenId': currScreen.value})
-        self._socketio.emit('update-countdown',{'counterVal':remainingSecs})
+class PostesPasadasServer(DFType3Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'postes pasadas',
+            gameUnit = 'puntos',
+            lowTimeThr = 15,
+            host = host,
+            port = port
+        )
+
+class PunteriaServer(DFType3Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'puntería',
+            gameUnit = 'puntos',
+            lowTimeThr = 15,
+            host = host,
+            port = port
+        )
+
+class RampaServer(DFType3Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'rampa',
+            gameUnit = 'puntos',
+            lowTimeThr = 15,
+            host = host,
+            port = port
+        )
+
+class ReaccionServer(DFType3Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'reacción',
+            gameUnit = 'puntos',
+            lowTimeThr = 15,
+            host = host,
+            port = port
+        )
+
+"""
+* aros basket
+* arquero
+* autopase
+* fuerza
+* octógono
+* postes pasadas
+* puntería
+* rampa
+* reacción
+"""
+
+# Type 4
+
+class PostesTiempoServer(DFType4Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'postes tiempo',
+            gameUnit = '',
+            playingTitle = 'midiendo el tiempo',
+            host = host,
+            port = port
+        )
+
+    def __seconds2Str(self, seconds : int | float):
+        return f'{int(seconds / 60)}:{str(int(seconds % 60))[:2]}'
+
+    # method overrides
+    def showPlaying(self, elapsedSeconds : int):
+        """
+        Shows the active game screen.
+        """
+        currScreen = DFBaseServer.DFType4Screens.playing
+        self._showScreen(currScreen)
+        self._updateParam('score',self.__seconds2Str(elapsedSeconds))
+
+    def showFinished(self, finalSeconds : int, recordSeconds : None | int = None):
+        """
+        Shows the game finished screen. The 'no new record' screen is shown if only 'finalScore' is provided, or if 'recordScore' is less than or equal to 'finalScore'. Otherwise, the 'new record' screen is shown.
+        """
+        if recordSeconds is None:
+            recordSeconds = finalSeconds
+
+        if finalSeconds <= recordSeconds:
+            currScreen = DFBaseServer.DFType4Screens.finishedNormal
+        else:
+            currScreen = DFBaseServer.DFType4Screens.finishedRecord
+        
+        self._showScreen(currScreen)
+        self._updateParam('finalScore',f'{self.__seconds2Str(finalSeconds)} {self._gameUnit}')
+        self._updateParam('recordScore',f'récord: {self.__seconds2Str(recordSeconds)} {self._gameUnit}')
+
+class PotenciaServer(DFType4Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'potencia',
+            gameUnit = 'kgf',
+            playingTitle = 'potencia',
+            host = host,
+            port = port
+        )
+
+class SaltoServer(DFType4Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'salto',
+            gameUnit = 'cm',
+            playingTitle = 'altura',
+            host = host,
+            port = port
+        )
+
+class VelocidadServer(DFType4Server):
+    def __init__(self, host = '127.0.0.1', port = 5000):
+        super().__init__(
+            gameName = 'velocidad',
+            gameUnit = 'km/h',
+            playingTitle = 'velocidad',
+            host = host,
+            port = port
+        )

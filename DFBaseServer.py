@@ -107,7 +107,7 @@ class DFBaseServer():
         """
         currScreen = DFBaseServer.DFGenericScreens.idle
         if currScreen != self._lastScreen:
-            self.showScreen(currScreen)
+            self._showScreen(currScreen)
             self._lastScreen = currScreen
 
     def showCountdown(self, remainingSecs : int):
@@ -118,11 +118,11 @@ class DFBaseServer():
         """
         currScreen = DFBaseServer.DFGenericScreens.loading
         if currScreen != self._lastScreen:
-            self.showScreen(currScreen)
+            self._showScreen(currScreen)
             self._lastScreen = currScreen
-        self.updateParam('countdownTimer',remainingSecs)
+        self._updateParam('countdownTimer',remainingSecs)
     
-    def showScreen(self, screen : DFGenericScreens | DFType1Screens | DFType2Screens | DFType3Screens | DFType4Screens):
+    def _showScreen(self, screen : DFGenericScreens | DFType1Screens | DFType2Screens | DFType3Screens | DFType4Screens):
         """
         Shows a specific screen on the client. The screen must be provided via the builtin DF<...>Screens ('Generic' or 'TypeN' with N being the option selected at server setup)
         """
@@ -139,7 +139,7 @@ class DFBaseServer():
             self._socketio.emit('changeScreen',{'screenId': screen.value})
             self._lastScreen = screen
 
-    def updateParam(self, paramClass : str, paramValue : any):
+    def _updateParam(self, paramClass : str, paramValue : any):
         """
         Abstraction provided to update a specific parameter with class 'paramClass' with the value 'paramVal' on the client. Does not guarantee that the relevant screen will be shown when updating.
         """
@@ -155,7 +155,7 @@ class DFType3Server(DFBaseServer):
             gameName = gameName,
             gameUnit = gameUnit,
             host = host, 
-            port = port
+            port = port,
             )
         
         self.__lowTimeThr = lowTimeThr
@@ -166,15 +166,16 @@ class DFType3Server(DFBaseServer):
         """
         if -1 < remainingSecs <= self.__lowTimeThr:
             currScreen = DFBaseServer.DFType3Screens.playingLowTime
-            self.showScreen(currScreen)
+            self._showScreen(currScreen)
         elif remainingSecs != -1:
             currScreen = DFBaseServer.DFType3Screens.playing
-            self.showScreen(currScreen)
+            self._showScreen(currScreen)
         
         if score != -1:
-            self.updateParam('score',score)
+            score = round(score, 2) #numeros con coma limitados a 2 decimales
+            self._updateParam('score',score)
         if remainingSecs != -1:
-            self.updateParam('countdownTimer',remainingSecs)
+            self._updateParam('countdownTimer',remainingSecs)
 
     def showFinished(self, finalScore : any, recordScore : any = None):
         """
@@ -182,49 +183,59 @@ class DFType3Server(DFBaseServer):
         """
         if recordScore is None:
             recordScore = finalScore
+
+        #numeros con coma limitados a 2 decimales
+        finalScore = round(finalScore,2)
+        recordScore = round(recordScore,2)
 
         if finalScore <= recordScore:
             currScreen = DFBaseServer.DFType3Screens.finishedNormal
         else:
             currScreen = DFBaseServer.DFType3Screens.finishedRecord
         
-        self.showScreen(currScreen)
-        self.updateParam('finalScore',f'{finalScore} {self._gameUnit}')
-        self.updateParam('recordScore',f'récord: {recordScore} {self._gameUnit}')
+        self._showScreen(currScreen)
+        self._updateParam('finalScore',f'{finalScore} {self._gameUnit}')
+        self._updateParam('recordScore',f'récord: {recordScore} {self._gameUnit}')
 
 class DFType4Server(DFBaseServer):
     """
     Template for the games that use a type 4 server. Must be inherited by the class visible to the game and should not used directly.
     """
-    def __init__(self, gameName : str, gameUnit : str, host = '127.0.0.1', port = 5000):
+    def __init__(self, gameName : str, gameUnit : str, playingTitle : str, host = '127.0.0.1', port = 5000):
         super().__init__(
             clientType = DFBaseServer.DFBaseServerType.type4,
             gameName = gameName,
             gameUnit = gameUnit,
+            playingTitle = playingTitle,
             host = host,
             port = port
         )
 
-    def showPlaying(self, score):
+    def showPlaying(self, score : int | float):
         """
         Shows the active game screen.
         """
         currScreen = DFBaseServer.DFType4Screens.playing
-        self.showScreen(currScreen)
-        self.updateParam('score',score)
+        self._showScreen(currScreen)
+        score = round(score, 2) #numeros con coma limitados a 2 decimales
+        self._updateParam('score',score)
 
-    def showFinished(self, finalScore : any, recordScore : any = None):
+    def showFinished(self, finalScore : int | float, recordScore : None | int | float = None):
         """
         Shows the game finished screen. The 'no new record' screen is shown if only 'finalScore' is provided, or if 'recordScore' is less than or equal to 'finalScore'. Otherwise, the 'new record' screen is shown.
         """
         if recordScore is None:
             recordScore = finalScore
 
+        #numeros con coma limitados a 2 decimales
+        finalScore = round(finalScore,2)
+        recordScore = round(recordScore,2)
+
         if finalScore <= recordScore:
             currScreen = DFBaseServer.DFType4Screens.finishedNormal
         else:
             currScreen = DFBaseServer.DFType4Screens.finishedRecord
         
-        self.showScreen(currScreen)
-        self.updateParam('finalScore',f'{finalScore} {self._gameUnit}')
-        self.updateParam('recordScore',f'récord: {recordScore} {self._gameUnit}')
+        self._showScreen(currScreen)
+        self._updateParam('finalScore',f'{finalScore} {self._gameUnit}')
+        self._updateParam('recordScore',f'récord: {recordScore} {self._gameUnit}')
