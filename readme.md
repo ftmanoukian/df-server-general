@@ -10,7 +10,7 @@ Tipo 1:
 * tateti
 
 Tipo 2: 
-* postes tiempo
+* ~~postes tiempo~~
 
 Tipo 3: 
 * postes pasadas
@@ -24,6 +24,7 @@ Tipo 3:
 * rampa
 
 Tipo 4:
-* velocidad
 * potencia
 * salto
+* postes tiempo
+* velocidad
