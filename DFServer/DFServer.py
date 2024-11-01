@@ -1,4 +1,4 @@
-from DFBaseServer import DFBaseServer, DFType3Server, DFType4Server, Enum
+from .DFBaseServer import DFBaseServer, DFType3Server, DFType4Server, Enum
 
 # Type1
 

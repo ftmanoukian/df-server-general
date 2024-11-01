@@ -1,13 +1,17 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='DFServer',
-    version='0.0.1',
-    packages=find_packages(),
-    py_modules=['DFServer.DFServer.py','DFServer.DFBaseServer.py'],
+    name = 'DFServer',
+    version = '0.0.1',
+    packages=find_packages(include=["DFServer","DFServer.*"]),
     include_package_data=True,
+    package_data={
+        "DFServer":["DFBaseServer.py","screens_generic/*.html","static/fonts/FugazOne-Regular.ttf","static/js/*.js","templates/totem.html"]
+    },
+    exclude_package_data={
+        "DFServer":["test_t*.py"]
+    },
     install_requires=[
-        'flask',
-        'flask-socketio'
+        'flask','flask-socketio'
     ]
 )
