@@ -6,7 +6,13 @@ setup(
     packages=find_packages(include=["DFServer","DFServer.*"]),
     include_package_data=True,
     package_data={
-        "DFServer":["DFBaseServer.py","screens_generic/*.html","static/fonts/FugazOne-Regular.ttf","static/js/*.js","templates/totem.html"]
+        "DFServer":[
+            "DFBaseServer.py",
+            "screens_generic/*.html",
+            "static/*.*",
+            "static/js/*.*",
+            "static/fonts/*.*",
+            "templates/totem.html"]
     },
     exclude_package_data={
         "DFServer":["test_t*.py"]
