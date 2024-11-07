@@ -85,7 +85,7 @@ class DFBaseServer():
             return render_template('totem.html', screensContent = self.__screens_content, gameName = self.__gameName, gameUnit = gameUnit, playingTitle = playingTitle)
 
     def __server(self):
-        self._socketio.run(self.__app, self.__host, self.__port, use_reloader = False)
+        self._socketio.run(self.__app, self.__host, self.__port, use_reloader = False, allow_unsafe_werkzeug = True)
 
     def start(self):
         """
